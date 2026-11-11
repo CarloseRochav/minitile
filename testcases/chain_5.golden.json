@@ -1,0 +1,114 @@
+{
+  "design": "chain_5",
+  "nets": [
+    {
+      "detour": 1.0,
+      "from": "m1",
+      "length": 2,
+      "manhattan": 2,
+      "path": [
+        [
+          10,
+          4
+        ]
+      ],
+      "pipeline_stages": 0,
+      "status": "ok",
+      "to": "m2",
+      "width": 128
+    },
+    {
+      "detour": 1.0,
+      "from": "m2",
+      "length": 2,
+      "manhattan": 2,
+      "path": [
+        [
+          16,
+          10
+        ]
+      ],
+      "pipeline_stages": 0,
+      "status": "ok",
+      "to": "m3",
+      "width": 128
+    },
+    {
+      "detour": 1.0,
+      "from": "m3",
+      "length": 3,
+      "manhattan": 3,
+      "path": [
+        [
+          24,
+          11
+        ],
+        [
+          25,
+          11
+        ]
+      ],
+      "pipeline_stages": 0,
+      "status": "ok",
+      "to": "m4",
+      "width": 64
+    },
+    {
+      "detour": 1.0,
+      "from": "m4",
+      "length": 2,
+      "manhattan": 2,
+      "path": [
+        [
+          26,
+          5
+        ]
+      ],
+      "pipeline_stages": 0,
+      "status": "ok",
+      "to": "m5",
+      "width": 64
+    }
+  ],
+  "params": {
+    "iterations": 20000,
+    "lambda_halo": 200.0,
+    "lambda_overlap": 1000.0,
+    "lambda_pipe": 50.0,
+    "seed": 42
+  },
+  "placement": {
+    "m1": [
+      2,
+      2
+    ],
+    "m2": [
+      11,
+      4
+    ],
+    "m3": [
+      16,
+      11
+    ],
+    "m4": [
+      26,
+      6
+    ],
+    "m5": [
+      23,
+      0
+    ]
+  },
+  "summary": {
+    "cost_final": 13.0,
+    "cost_initial": 19.0,
+    "iterations": 20000,
+    "legal": true,
+    "max_detour": 1.0,
+    "seed": 42,
+    "total_pipeline_stages": 0,
+    "total_weighted_length": 13.0,
+    "unroutable_count": 0,
+    "violations": []
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "design": "star_noc",
+  "nets": [
+    {
+      "detour": 1.0,
+      "from": "gpu",
+      "length": 2,
+      "manhattan": 2,
+      "path": [
+        [
+          11,
+          14
+        ]
+      ],
+      "pipeline_stages": 0,
+      "status": "ok",
+      "to": "noc",
+      "width": 256
+    },
+    {
+      "detour": 1.0,
+      "from": "cpu",
+      "length": 3,
+      "manhattan": 3,
+      "path": [
+        [
+          9,
+          10
+        ],
+        [
+          10,
+          10
+        ]
+      ],
+      "pipeline_stages": 0,
+      "status": "ok",
+      "to": "noc",
+      "width": 128
+    },
+    {
+      "detour": 1.0,
+      "from": "dsp",
+      "length": 2,
+      "manhattan": 2,
+      "path": [
+        [
+          25,
+          12
+        ]
+      ],
+      "pipeline_stages": 0,
+      "status": "ok",
+      "to": "modem",
+      "width": 64
+    },
+    {
+      "detour": 1.0,
+      "from": "noc",
+      "length": 3,
+      "manhattan": 3,
+      "path": [
+        [
+          15,
+          12
+        ],
+        [
+          16,
+          12
+        ]
+      ],
+      "pipeline_stages": 0,
+      "status": "ok",
+      "to": "modem",
+      "width": 64
+    }
+  ],
+  "params": {
+    "iterations": 20000,
+    "lambda_halo": 200.0,
+    "lambda_overlap": 1000.0,
+    "lambda_pipe": 50.0,
+    "seed": 42
+  },
+  "placement": {
+    "cpu": [
+      2,
+      2
+    ],
+    "dsp": [
+      26,
+      10
+    ],
+    "gpu": [
+      5,
+      15
+    ],
+    "modem": [
+      17,
+      12
+    ],
+    "noc": [
+      11,
+      10
+    ]
+  },
+  "summary": {
+    "cost_final": 19.0,
+    "cost_initial": 34.0,
+    "iterations": 20000,
+    "legal": true,
+    "max_detour": 1.0,
+    "seed": 42,
+    "total_pipeline_stages": 0,
+    "total_weighted_length": 19.0,
+    "unroutable_count": 0,
+    "violations": []
+  }
+}
