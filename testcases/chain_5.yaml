@@ -1,0 +1,14 @@
+# A 5-module pipeline chain m1 -> m2 -> m3 -> m4 -> m5 with one fixed module.
+die: { width: 40, height: 40, halo: 1 }
+reach_per_cycle: 12
+modules:
+  - { name: m1, w: 8, h: 8, fixed: [2, 2] }
+  - { name: m2, w: 6, h: 6 }
+  - { name: m3, w: 8, h: 6 }
+  - { name: m4, w: 6, h: 8 }
+  - { name: m5, w: 5, h: 5 }
+nets:
+  - { from: m1, to: m2, width: 128 }
+  - { from: m2, to: m3, width: 128 }
+  - { from: m3, to: m4, width: 64 }
+  - { from: m4, to: m5, width: 64 }

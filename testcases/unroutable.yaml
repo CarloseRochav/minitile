@@ -1,0 +1,11 @@
+die: { width: 20, height: 20, halo: 0 }
+reach_per_cycle: 12
+modules:
+  - { name: a,      w: 2, h: 2, fixed: [1, 1] }
+  - { name: b,      w: 2, h: 2, fixed: [10, 10] }
+  - { name: bottom, w: 4, h: 1, fixed: [9, 9] }
+  - { name: top,    w: 4, h: 1, fixed: [9, 12] }
+  - { name: left,   w: 1, h: 2, fixed: [9, 10] }
+  - { name: right,  w: 1, h: 2, fixed: [12, 10] }
+nets:
+  - { from: a, to: b, width: 64 }

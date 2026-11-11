@@ -1,0 +1,8 @@
+die: { width: 30, height: 20, halo: 1 }
+reach_per_cycle: 12
+modules:
+  - { name: a,    w: 4, h: 4,  fixed: [2, 8] }
+  - { name: b,    w: 4, h: 4,  fixed: [24, 8] }
+  - { name: wall, w: 2, h: 16, fixed: [14, 2] }
+nets:
+  - { from: a, to: b, width: 64 }

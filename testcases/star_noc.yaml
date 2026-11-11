@@ -1,0 +1,19 @@
+# The example design from SPEC.md Section 5: a small star-shaped NoC.
+die:
+  width: 40
+  height: 40
+  halo: 1
+reach_per_cycle: 12
+
+modules:
+  - { name: cpu,   w: 8,  h: 8, fixed: [2, 2] }
+  - { name: gpu,   w: 10, h: 8 }
+  - { name: dsp,   w: 6,  h: 6 }
+  - { name: modem, w: 8,  h: 6 }
+  - { name: noc,   w: 4,  h: 4 }
+
+nets:
+  - { from: cpu, to: noc,   width: 128 }
+  - { from: gpu, to: noc,   width: 256 }
+  - { from: dsp, to: modem, width: 64 }
+  - { from: noc, to: modem, width: 64 }
