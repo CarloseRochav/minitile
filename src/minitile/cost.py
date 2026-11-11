@@ -73,6 +73,9 @@ class CostModel:
         return weight * d + self.weights.lambda_pipe * stages_for(d, self.reach)
 
     def pair_cost(self, ra: Rect, rb: Rect) -> float:
+        h = self.halo
+        if rb.x - ra.x2 > h or ra.x - rb.x2 > h or rb.y - ra.y2 > h or ra.y - rb.y2 > h:
+            return 0.0  # separated by more than the halo: no overlap, no halo violation
         ov = overlap_area(ra, rb)
         hv = halo_violation_pair(ra, rb, self.halo)
         return self.weights.lambda_overlap * ov + self.weights.lambda_halo * hv
@@ -106,13 +109,17 @@ class CostModel:
 
     def delta(self, pos: list[Position], moves: Mapping[int, Position]) -> float:
         """Cost change if module ``i`` moved to ``moves[i]``; only affected terms recomputed."""
+        before = [self.rect(i, p) for i, p in enumerate(pos)]
+        return self.delta_rects(before, {i: self.rect(i, p) for i, p in moves.items()})
+
+    def delta_rects(self, rects: list[Rect], moves: Mapping[int, Rect]) -> float:
+        """Same as ``delta`` but on precomputed rects (hot path of the annealer)."""
         moved = sorted(moves)
         net_ids = sorted({k for i in moved for k in self.nets_of[i]})
-        before = [self.rect(i, p) for i, p in enumerate(pos)]
-        after = list(before)
-        for i, p in moves.items():
-            after[i] = self.rect(i, p)
-        return self._local(after, moved, net_ids) - self._local(before, moved, net_ids)
+        after = list(rects)
+        for i, r in moves.items():
+            after[i] = r
+        return self._local(after, moved, net_ids) - self._local(rects, moved, net_ids)
 
     # ------------------------------------------------------------ partial (greedy)
     def partial(
