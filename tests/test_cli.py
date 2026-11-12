@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -155,3 +156,20 @@ def test_run_movable_json_not_skipped(tmp_path: Path) -> None:
     assert json.loads(out.read_text())["summary"]["placement_skipped"] is False
     assert r.stdout.startswith("Placement cost:")
     assert "(+0%)" not in r.stdout
+
+
+HEADER_RE = re.compile(
+    r"^Placement cost: (?P<x>[\d,]+) (?:→|->) (?P<y>[\d,]+) "
+    r"\((?P<pct>0%|[\N{MINUS SIGN}-]\d+%|\+\d+%)\)  legal: yes  seed: 42  iterations: 20,000$"
+)
+
+
+def test_run_real_placement_header() -> None:
+    """star_noc has movable modules: the header must show `Placement cost: X → Y (...)`."""
+    r = runner.invoke(app, ["run", str(TESTCASES / "star_noc.yaml"), "--seed", "42"])
+    assert r.exit_code == 0, r.stdout
+    m = HEADER_RE.match(r.stdout.splitlines()[0])
+    assert m, r.stdout.splitlines()[0]
+    x, y = int(m["x"].replace(",", "")), int(m["y"].replace(",", ""))
+    assert y < x  # annealing improved on greedy
+    assert m["pct"] != "0%" and not m["pct"].startswith("+")
