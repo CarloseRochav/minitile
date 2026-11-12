@@ -1,6 +1,6 @@
 # minitile — Phase 1 Spec
 
-> A learning project inspired by physical-aware floorplanning (e.g. Qualcomm's Physical Aware Tiling).
+> A learning project inspired by physical-aware floorplanning.
 > It places rectangular chip modules on a grid, routes data paths between them, and reports
 > wirelength, detours and pipeline stages. It is a simplified model, not a real EDA tool.
 
