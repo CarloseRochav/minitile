@@ -6,7 +6,7 @@ from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
 from minitile import Floorplan
-from minitile.geometry import Rect, overlap_area, violates_halo
+from minitile.geometry import Rect, cells, distance_to_rect, overlap_area, violates_halo
 from minitile.model import Design
 from minitile.parser import validate_data
 
@@ -66,6 +66,30 @@ def test_routed_nets_length_ge_manhattan(design: Design, seed: int) -> None:
         if n.length is not None:
             assert n.length >= n.manhattan
             assert n.detour is not None and n.detour >= 1
+
+
+@SETTINGS
+@given(designs(), st.integers(0, 2**16))
+def test_every_path_is_4_connected_and_avoids_modules(design: Design, seed: int) -> None:
+    """SPEC 11.5: every returned path is 4-connected and contains no module cells."""
+    result = Floorplan(design).place(seed=seed, iterations=ITERATIONS).route().report()
+    blocked: set[tuple[int, int]] = set()
+    for m in design.modules:
+        blocked |= cells(m.rect_at(result.placement[m.name]))
+    for n in result.nets:
+        if n.length is None or n.length <= 1:
+            assert n.path == []  # unroutable, adjacent or overlapping: no free cells
+            continue
+        assert len(n.path) == n.length - 1
+        src = design.module(n.src).rect_at(result.placement[n.src])
+        dst = design.module(n.dst).rect_at(result.placement[n.dst])
+        assert distance_to_rect(n.path[0], src) == 1
+        assert distance_to_rect(n.path[-1], dst) == 1
+        for x, y in n.path:
+            assert (x, y) not in blocked
+            assert 0 <= x < design.die.width and 0 <= y < design.die.height
+        for (x1, y1), (x2, y2) in zip(n.path, n.path[1:], strict=False):
+            assert abs(x1 - x2) + abs(y1 - y2) == 1
 
 
 @SETTINGS
