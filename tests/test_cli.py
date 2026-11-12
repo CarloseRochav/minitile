@@ -173,3 +173,9 @@ def test_run_real_placement_header() -> None:
     x, y = int(m["x"].replace(",", "")), int(m["y"].replace(",", ""))
     assert y < x  # annealing improved on greedy
     assert m["pct"] != "0%" and not m["pct"].startswith("+")
+
+
+def test_long_net_names_not_truncated() -> None:
+    r = runner.invoke(app, ["run", str(TESTCASES / "soc_demo.yaml"), "--iterations", "200"])
+    assert "…" not in r.stdout
+    assert "cpu_cluster→l3_cache" in r.stdout or "cpu_cluster->l3_cache" in r.stdout

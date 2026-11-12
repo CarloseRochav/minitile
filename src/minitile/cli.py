@@ -12,6 +12,7 @@ import typer
 from pydantic import ValidationError
 from rich import box
 from rich.console import Console
+from rich.measure import Measurement
 from rich.table import Table
 
 from minitile.api import Floorplan
@@ -108,6 +109,11 @@ def render(console: Console, result: Result) -> None:
             "-" if n.pipeline_stages is None else str(n.pipeline_stages),
             f"[{styles[n.status]}]{n.status}[/]",
         )
+    # Not a terminal (pipe, file, test runner): print at natural width instead of truncating
+    # long net names to the default 80 columns.
+    if not console.is_terminal:
+        natural = Measurement.get(console, console.options.update(width=10_000), table).maximum
+        console.width = max(console.width, natural)
     console.print(table)
     s = result.summary
     for v in s.violations:

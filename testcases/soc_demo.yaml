@@ -1,0 +1,54 @@
+# soc_demo: a mobile-SoC-like floorplan (15 blocks on an 80x80 die).
+# Both LPDDR controllers sit on the left edge, PCIe on the top edge and USB on the right edge;
+# the shared L3 cache is fixed in the middle. Compute and media blocks are movable around a
+# central NoC, with a few direct high-bandwidth links (GPU-DDR, NPU-SRAM, camera pipeline).
+# Intent: bandwidth pulls blocks toward the NoC, edge-to-edge paths still need pipeline stages,
+# and routes that cross the die have to go around the L3 cache.
+die: { width: 80, height: 80, halo: 1 }
+reach_per_cycle: 8
+
+modules:
+  # fixed: memory controllers and I/O PHYs on the die edges
+  - { name: ddr_ctrl_0, w: 6,  h: 14, fixed: [0, 12] }
+  - { name: ddr_ctrl_1, w: 6,  h: 14, fixed: [0, 54] }
+  - { name: pcie_phy,   w: 14, h: 5,  fixed: [12, 75] }
+  - { name: usb_phy,    w: 4,  h: 12, fixed: [76, 10] }
+  # fixed: shared last-level cache near the center
+  - { name: l3_cache,   w: 18, h: 18, fixed: [31, 31] }
+  # movable compute, media and infrastructure blocks
+  - { name: cpu_cluster, w: 14, h: 12 }
+  - { name: gpu,         w: 16, h: 14 }
+  - { name: npu,         w: 12, h: 12 }
+  - { name: isp,         w: 10, h: 8 }
+  - { name: dsp,         w: 8,  h: 8 }
+  - { name: modem,       w: 12, h: 10 }
+  - { name: video_codec, w: 10, h: 8 }
+  - { name: display,     w: 8,  h: 6 }
+  - { name: noc,         w: 6,  h: 6 }
+  - { name: sram,        w: 10, h: 8 }
+
+nets:
+  # NoC star (bus width in bits)
+  - { from: cpu_cluster, to: noc,        width: 512 }
+  - { from: gpu,         to: noc,        width: 256 }
+  - { from: npu,         to: noc,        width: 256 }
+  - { from: isp,         to: noc,        width: 128 }
+  - { from: dsp,         to: noc,        width: 64 }
+  - { from: modem,       to: noc,        width: 128 }
+  - { from: video_codec, to: noc,        width: 128 }
+  - { from: display,     to: noc,        width: 64 }
+  - { from: noc,         to: ddr_ctrl_0, width: 512 }
+  - { from: noc,         to: ddr_ctrl_1, width: 512 }
+  - { from: noc,         to: pcie_phy,   width: 128 }
+  - { from: noc,         to: usb_phy,    width: 64 }
+  - { from: noc,         to: l3_cache,   width: 256 }
+  # direct high-bandwidth links
+  - { from: cpu_cluster, to: l3_cache,   width: 512 }
+  - { from: gpu,         to: ddr_ctrl_1, width: 512 }
+  - { from: npu,         to: sram,       width: 512 }
+  # peer-to-peer links: camera pipeline, modem DSP, display composition
+  - { from: isp,         to: video_codec, width: 128 }
+  - { from: video_codec, to: display,    width: 128 }
+  - { from: isp,         to: npu,        width: 256 }
+  - { from: dsp,         to: modem,      width: 128 }
+  - { from: gpu,         to: display,    width: 128 }

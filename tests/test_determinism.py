@@ -35,7 +35,7 @@ def run_cli(design: Path, out: Path, hashseed: str) -> bytes:
     return out.read_bytes()
 
 
-@pytest.mark.parametrize("name", ["star_noc", "chain_5"])
+@pytest.mark.parametrize("name", ["star_noc", "chain_5", "soc_demo"])
 def test_output_identical_across_hash_seeds(name: str, tmp_path: Path) -> None:
     design = TESTCASES / f"{name}.yaml"
     a = run_cli(design, tmp_path / "a.json", "1")
