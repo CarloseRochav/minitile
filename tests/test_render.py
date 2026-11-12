@@ -156,3 +156,17 @@ def test_cli_render_bad_input(tmp_path: Path) -> None:
     bad.write_text("{nope")
     r = runner.invoke(app, ["render", str(bad), "--out", str(tmp_path / "x.svg")])
     assert r.exit_code == 1
+
+
+def test_docs_image_up_to_date(update_golden: bool) -> None:
+    """README embeds docs/img/soc_demo.svg; it must match the current renderer output."""
+    image = Path(__file__).parent.parent / "docs" / "img" / "soc_demo.svg"
+    svg = result_for("soc_demo").to_svg_str()
+    if update_golden:
+        image.parent.mkdir(parents=True, exist_ok=True)
+        image.write_text(svg, encoding="utf-8", newline="\n")
+        pytest.skip("updated docs/img/soc_demo.svg")
+    assert image.exists(), "missing docs/img/soc_demo.svg; run `uv run pytest --update-golden`"
+    assert image.read_text(encoding="utf-8") == svg, (
+        "docs/img/soc_demo.svg is out of date; run `uv run pytest --update-golden`"
+    )

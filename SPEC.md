@@ -22,7 +22,8 @@ Given a YAML description of a die (chip area), modules (rectangles) and nets (da
 5. Output a JSON result and a readable table.
 
 ### Out of scope for Phase 1
-- SVG/HTML rendering, web GUI, FastAPI, MCP server, testcase extraction (Phases 2–4).
+- HTML rendering, web GUI, FastAPI, MCP server, testcase extraction (Phases 2–4).
+  *SVG rendering (part of Phase 2) is now implemented; see Section 14.*
 - Net-to-net congestion (routes do not block each other).
 - Module rotation (field exists in the model, but must be rejected by validation if `true`).
 - Timing models beyond the simple `reach_per_cycle` rule.
@@ -432,3 +433,38 @@ Expected: `status = unroutable`, `length = null`; CLI `run` exits with code `3`.
 - Timing is a single "reach per cycle" number; real timing depends on wire RC, buffers and corners.
 - No power grid, no pins on specific module edges, no multi-pin nets.
 - Grid units are abstract, not microns.
+
+---
+
+## 14. Rendering (`render.py`, part of Phase 2)
+
+Draws a result as a standalone SVG. Stdlib only (string building), no new dependencies.
+
+### Interfaces
+```
+minitile render RESULT.json --out FILE.svg [--cell 10]
+minitile run DESIGN.yaml ... --svg FILE.svg
+result.to_svg(path, cell=10)
+```
+The result JSON carries a `layout` section (die size and halo, `reach_per_cycle`, and each
+module's `w`, `h` and `fixed` flag), so a saved result can be drawn without the design file.
+
+### Drawing rules
+- `cell` pixels per grid cell. Grid origin is bottom-left (Section 4) and SVG origin is
+  top-left, so y is flipped: `svg_y = (die.height - y - h) * cell`.
+- An explicit white background rect (readable in dark mode), the die outline, and a light grid
+  line every 10 cells (no per-cell grid).
+- Modules: filled rects with the name centered. The font shrinks to fit (and rotates 90° in tall,
+  narrow blocks); a name that would need less than 5 px is omitted, so text never overflows.
+  Fixed modules use a darker diagonal hatch, movable modules a light fill.
+- Routes: polylines through cell centers, starting and ending at the midpoint of the footprint
+  edge shared with the first/last path cell. Color by status (ok, detour_warning, unroutable)
+  from a colorblind-safe palette, and status is never shown by color alone: warnings are
+  dashed, unroutable nets are dotted straight lines between module centers. Stroke width is
+  1–4 px by log2(bus width).
+- Pipeline stage markers: a net with S stages gets a marker at the cell reached after
+  `k · reach_per_cycle` steps from the source footprint, for k = 1..S.
+- Title block: design name, seed, cost initial → final (or "placement skipped"), total pipeline
+  stages, max detour. Legend: fixed vs movable, the three route statuses, the stage marker.
+- Deterministic: the same JSON gives a byte-identical SVG (no timestamps or random ids;
+  coordinates rounded to at most 2 decimals; modules drawn in name order, nets in result order).

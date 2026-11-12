@@ -15,6 +15,15 @@ between them, minitile:
 It is a simplified model and **not a real EDA tool**. See [SPEC.md](SPEC.md) for the exact
 definitions.
 
+![soc_demo floorplan: placed blocks, routes, and pipeline-stage markers](docs/img/soc_demo.svg)
+
+`testcases/soc_demo.yaml` with `--seed 42`: annealing cuts the placement cost from 2,854 to
+2,236 (−22%) and pulls the GPU, display and video codec to within 2–5 cells of the NoC, with the
+GPU also 4 cells from `ddr_ctrl_1`. Paths to the edge PHYs can't shrink: `noc→usb_phy` crosses
+the die in 64 steps and needs 7 pipeline stages, and `noc→pcie_phy` needs 4. The dashed orange
+route is `dsp→noc`, which has to go over the fixed `l3_cache`: 39 steps against a Manhattan
+distance of 28 (detour 1.393).
+
 ## How it relates to physical-aware floorplanning
 
 In a real SoC, where blocks sit on the die decides how long the wires between them are. Long
@@ -65,6 +74,17 @@ uv run minitile report result.json
 
 `run` exit codes: `0` ok, `1` invalid design, `2` illegal placement, `3` one or more unroutable nets.
 
+Drawing a result as SVG:
+
+```bash
+uv run minitile run testcases/soc_demo.yaml --seed 42 --svg soc_demo.svg   # draw while running
+uv run minitile render result.json --out result.svg [--cell 10]           # draw a saved result
+```
+
+`--cell` is the number of pixels per grid cell. Fixed blocks are hatched. Routes are solid
+(ok), dashed (detour > 1.3) or dotted straight lines (unroutable), and black diamonds mark
+where pipeline registers would go. The same JSON always gives a byte-identical SVG.
+
 Python API (every step returns a new, immutable `Floorplan`):
 
 ```python
@@ -73,6 +93,7 @@ from minitile import Floorplan
 fp = Floorplan.load("testcases/chain_5.yaml")
 result = fp.place(seed=42, iterations=20_000).route().report()
 result.to_json("out.json")
+result.to_svg("out.svg", cell=10)
 print(result.summary.max_detour)
 ```
 
@@ -81,22 +102,40 @@ print(result.summary.max_detour)
 ### Placement example
 
 ```
-$ uv run minitile run testcases/star_noc.yaml --seed 42
-Placement cost: 34 → 19 (−44%)  legal: yes  seed: 42  iterations: 20,000
+$ uv run minitile run testcases/soc_demo.yaml --seed 42
+Placement cost: 2,854 → 2,236 (−22%)  legal: yes  seed: 42  iterations: 20,000
 
- Net         Width   Length   Manhattan   Detour   Stages   Status
- ─────────────────────────────────────────────────────────────────
- gpu→noc       256        2           2    1.000        0   ok
- cpu→noc       128        3           3    1.000        0   ok
- dsp→modem      64        2           2    1.000        0   ok
- noc→modem      64        3           3    1.000        0   ok
+ Net                    Width   Length   Manhattan   Detour   Stages   Status
+ ────────────────────────────────────────────────────────────────────────────────────
+ cpu_cluster→l3_cache     512        2           2    1.000        0   ok
+ cpu_cluster→noc          512       11          11    1.000        1   ok
+ gpu→ddr_ctrl_1           512        4           4    1.000        0   ok
+ noc→ddr_ctrl_0           512       24          24    1.000        2   ok
+ noc→ddr_ctrl_1           512       30          30    1.000        3   ok
+ npu→sram                 512        2           2    1.000        0   ok
+ gpu→noc                  256        3           3    1.000        0   ok
+ isp→npu                  256        2           2    1.000        0   ok
+ noc→l3_cache             256        6           6    1.000        0   ok
+ npu→noc                  256       16          16    1.000        1   ok
+ dsp→modem                128        2           2    1.000        0   ok
+ gpu→display              128        8           8    1.000        0   ok
+ isp→noc                  128       15          12    1.250        1   ok
+ isp→video_codec          128        7           7    1.000        0   ok
+ modem→noc                128       32          28    1.143        3   ok
+ noc→pcie_phy             128       36          36    1.000        4   ok
+ video_codec→display      128        2           2    1.000        0   ok
+ video_codec→noc          128        5           5    1.000        0   ok
+ display→noc               64        2           2    1.000        0   ok
+ dsp→noc                   64       39          28    1.393        4   detour_warning
+ noc→usb_phy               64       64          64    1.000        7   ok
 
-Total weighted length: 19.000  pipeline stages: 0  max detour: 1.000  unroutable: 0
+Total weighted length: 1,011.000  pipeline stages: 26  max detour: 1.393  unroutable: 0
 ```
 
 ### Routing example (all modules fixed; shows routing around an obstacle)
 
-A wall sits between `a` and `b`, so the route goes over it: 33 steps instead of the Manhattan 19.
+A wall sits between `a` and `b`, so the route has to go around it (here underneath, along y = 1):
+33 steps instead of the Manhattan 19.
 
 ```
 $ uv run minitile run testcases/blocked_route.yaml --seed 42
@@ -130,14 +169,14 @@ fixed modules overlapping, total area too large, ...).
 
 ```bash
 uv run pytest                     # all tests (unit, golden, hypothesis property tests)
-uv run pytest --update-golden     # regenerate testcases/*.golden.json (explicit only)
+uv run pytest --update-golden     # regenerate testcases/*.golden.{json,svg} and docs/img/soc_demo.svg
 uv run ruff check && uv run ruff format --check
 uv run mypy --strict
 uv run python scripts/benchmark.py   # 30 modules / 60 nets / 100x100, target < 10 s
 ```
 
 Layout: `src/minitile/` holds `model`, `geometry`, `parser`, `cost`, `placer`, `router`,
-`metrics`, `api` and `cli`. Tests are in `tests/` and example designs in `testcases/`.
+`metrics`, `api`, `render` and `cli`. Tests are in `tests/` and example designs in `testcases/`.
 
 **Console encoding:** on consoles that can't show `→` and `−` (e.g. Windows cp1252), the table
 falls back to `->` and `-`. Set `PYTHONIOENCODING=utf-8` to get the Unicode glyphs.
