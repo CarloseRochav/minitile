@@ -1,5 +1,40 @@
 {
   "design": "chain_5",
+  "layout": {
+    "die": {
+      "halo": 1,
+      "height": 40,
+      "width": 40
+    },
+    "modules": {
+      "m1": {
+        "fixed": true,
+        "h": 8,
+        "w": 8
+      },
+      "m2": {
+        "fixed": false,
+        "h": 6,
+        "w": 6
+      },
+      "m3": {
+        "fixed": false,
+        "h": 6,
+        "w": 8
+      },
+      "m4": {
+        "fixed": false,
+        "h": 8,
+        "w": 6
+      },
+      "m5": {
+        "fixed": false,
+        "h": 5,
+        "w": 5
+      }
+    },
+    "reach_per_cycle": 12
+  },
   "nets": [
     {
       "detour": 1.0,

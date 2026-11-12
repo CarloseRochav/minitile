@@ -93,7 +93,7 @@ def test_run_out_and_report(tmp_path: Path) -> None:
     )
     assert r.exit_code == 0, r.stdout
     data = json.loads(out.read_text())
-    assert set(data) == {"design", "params", "placement", "nets", "summary"}
+    assert set(data) == {"design", "params", "placement", "nets", "summary", "layout"}
     assert set(data["params"]) == {
         "seed",
         "iterations",

@@ -6,6 +6,8 @@ from minitile.cost import CostWeights, stages_for
 from minitile.geometry import manhattan
 from minitile.model import (
     Design,
+    Layout,
+    LayoutModule,
     NetMetrics,
     NetStatus,
     Params,
@@ -86,4 +88,29 @@ def build_result(
         placement={m.name: pr.placement[m.name] for m in design.modules},
         nets=nets,
         summary=summarize(pr, nets),
+        layout=Layout(
+            die=design.die,
+            reach_per_cycle=design.reach_per_cycle,
+            modules={
+                m.name: LayoutModule(w=m.w, h=m.h, fixed=m.fixed is not None)
+                for m in design.modules
+            },
+        ),
     )
+
+
+MINUS = "\N{MINUS SIGN}"
+
+
+def percent_change(initial: float, final: float, minus: str = MINUS) -> str:
+    """Rounded percent change.
+
+    ``0%`` when it rounds to zero (never ``+0%``); improvements use the minus sign (U+2212),
+    regressions ``+``.
+    """
+    if initial <= 0:
+        return "0%"
+    pct = round((final - initial) / initial * 100)
+    if pct == 0:
+        return "0%"
+    return f"{minus}{-pct}%" if pct < 0 else f"+{pct}%"

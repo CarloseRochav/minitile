@@ -130,12 +130,37 @@ def _round_floats(obj: Any) -> Any:
     return obj
 
 
+class LayoutModule(_Base):
+    w: int
+    h: int
+    fixed: bool
+
+
+class Layout(_Base):
+    """Geometry needed to draw a result without the design file (used by rendering)."""
+
+    die: Die
+    reach_per_cycle: int
+    modules: dict[str, LayoutModule]
+
+
 class Result(_Base):
     design: str
     params: Params
     placement: Placement
     nets: list[NetMetrics]
     summary: Summary
+    layout: Layout | None = None  # None only for result files written before rendering existed
+
+    def to_svg_str(self, cell: int = 10) -> str:
+        from minitile.render import render_svg  # local import: render depends on this module
+
+        # Render from the same rounded data that to_json writes, so `run --svg` and
+        # `render RESULT.json` give byte-identical SVGs.
+        return render_svg(Result.model_validate(self.to_dict()), cell=cell)
+
+    def to_svg(self, path: str | Path, cell: int = 10) -> None:
+        Path(path).write_text(self.to_svg_str(cell), encoding="utf-8", newline="\n")
 
     def to_dict(self) -> dict[str, Any]:
         rounded: dict[str, Any] = _round_floats(self.model_dump(mode="json", by_alias=True))

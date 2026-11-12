@@ -1,5 +1,40 @@
 {
   "design": "star_noc",
+  "layout": {
+    "die": {
+      "halo": 1,
+      "height": 40,
+      "width": 40
+    },
+    "modules": {
+      "cpu": {
+        "fixed": true,
+        "h": 8,
+        "w": 8
+      },
+      "dsp": {
+        "fixed": false,
+        "h": 6,
+        "w": 6
+      },
+      "gpu": {
+        "fixed": false,
+        "h": 8,
+        "w": 10
+      },
+      "modem": {
+        "fixed": false,
+        "h": 6,
+        "w": 8
+      },
+      "noc": {
+        "fixed": false,
+        "h": 4,
+        "w": 4
+      }
+    },
+    "reach_per_cycle": 12
+  },
   "nets": [
     {
       "detour": 1.0,

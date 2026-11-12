@@ -72,7 +72,7 @@ def test_json_roundtrip(tmp_path: Path) -> None:
     out = tmp_path / "out.json"
     r.to_json(out)
     data = r.to_dict()
-    assert set(data) == {"design", "params", "placement", "nets", "summary"}
+    assert set(data) == {"design", "params", "placement", "nets", "summary", "layout"}
     assert set(data["nets"][0]) == {
         "from",
         "to",
@@ -85,3 +85,12 @@ def test_json_roundtrip(tmp_path: Path) -> None:
         "path",
     }
     assert type(r).from_json(out).to_json_str() == out.read_text()
+
+
+def test_layout_section() -> None:
+    r = Floorplan.load(TESTCASES / "blocked_route.yaml").place(iterations=0).route().report()
+    assert r.layout is not None
+    assert (r.layout.die.width, r.layout.die.height, r.layout.die.halo) == (30, 20, 1)
+    assert r.layout.reach_per_cycle == 12
+    assert r.layout.modules["wall"].w == 2 and r.layout.modules["wall"].h == 16
+    assert all(m.fixed for m in r.layout.modules.values())

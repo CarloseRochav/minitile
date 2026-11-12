@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="542" height="370" viewBox="0 0 542 370" font-family="Helvetica, Arial, sans-serif">
+<title>minitile: blocked_route</title>
+<defs>
+<pattern id="hatch-fixed" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+<rect width="6" height="6" fill="#C8C8C8"/>
+<line x1="0" y1="0" x2="0" y2="6" stroke="#6E6E6E" stroke-width="2"/>
+</pattern>
+</defs>
+<rect class="background" x="0" y="0" width="542" height="370" fill="#FFFFFF"/>
+<text class="title" x="16" y="32" font-size="18" font-weight="bold" fill="#111111">blocked_route</text>
+<text class="title" x="16" y="58" font-size="13" font-weight="normal" fill="#111111">seed 42  ·  placement skipped (all modules fixed)</text>
+<text class="title" x="16" y="79" font-size="13" font-weight="normal" fill="#111111">pipeline stages: 2  ·  max detour: 1.737</text>
+<g class="die" transform="translate(16,96)">
+<rect class="die-outline" x="0" y="0" width="300" height="200" fill="#FCFCFC" stroke="#333333" stroke-width="1.5"/>
+<line class="grid" x1="100" y1="0" x2="100" y2="200" stroke="#E4E4E4" stroke-width="1"/>
+<line class="grid" x1="200" y1="0" x2="200" y2="200" stroke="#E4E4E4" stroke-width="1"/>
+<line class="grid" x1="0" y1="100" x2="300" y2="100" stroke="#E4E4E4" stroke-width="1"/>
+<g class="module-group">
+<title>a (4x4) at [2, 8] fixed</title>
+<rect class="module fixed" x="20" y="80" width="40" height="40" fill="url(#hatch-fixed)" stroke="#3C3C3C" stroke-width="1.5"/>
+<text class="label" x="40" y="100" font-size="12" text-anchor="middle" dominant-baseline="central" fill="#111111" paint-order="stroke" stroke="#FFFFFF" stroke-width="2.5">a</text>
+</g>
+<g class="module-group">
+<title>b (4x4) at [24, 8] fixed</title>
+<rect class="module fixed" x="240" y="80" width="40" height="40" fill="url(#hatch-fixed)" stroke="#3C3C3C" stroke-width="1.5"/>
+<text class="label" x="260" y="100" font-size="12" text-anchor="middle" dominant-baseline="central" fill="#111111" paint-order="stroke" stroke="#FFFFFF" stroke-width="2.5">b</text>
+</g>
+<g class="module-group">
+<title>wall (2x16) at [14, 2] fixed</title>
+<rect class="module fixed" x="140" y="20" width="20" height="160" fill="url(#hatch-fixed)" stroke="#3C3C3C" stroke-width="1.5"/>
+<text class="label" x="150" y="100" font-size="12" text-anchor="middle" dominant-baseline="central" fill="#111111" paint-order="stroke" stroke="#FFFFFF" stroke-width="2.5" transform="rotate(-90 150 100)">wall</text>
+</g>
+<polyline class="route detour_warning" points="60,115 65,115 75,115 85,115 95,115 105,115 115,115 125,115 135,115 135,125 135,135 135,145 135,155 135,165 135,175 135,185 145,185 155,185 165,185 165,175 165,165 165,155 165,145 165,135 165,125 165,115 175,115 185,115 195,115 205,115 215,115 225,115 235,115 240,115" fill="none" stroke="#E69F00" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="8 4"><title>a -&gt; b: detour_warning</title></polyline>
+<path class="stage-marker" d="M135,150.5 L139.5,155 L135,159.5 L130.5,155 Z" fill="#000000" stroke="#FFFFFF" stroke-width="1"/>
+<path class="stage-marker" d="M165,120.5 L169.5,125 L165,129.5 L160.5,125 Z" fill="#000000" stroke="#FFFFFF" stroke-width="1"/>
+</g>
+<g class="legend">
+<g transform="translate(16,321)"><rect x="0" y="-7" width="24" height="14" fill="#D6ECF8" stroke="#0072B2" stroke-width="1.5"/>
+<text x="32" y="0" font-size="12" dominant-baseline="central" fill="#111111">movable module</text></g>
+<g transform="translate(186,321)"><rect x="0" y="-7" width="24" height="14" fill="url(#hatch-fixed)" stroke="#3C3C3C" stroke-width="1.5"/>
+<text x="32" y="0" font-size="12" dominant-baseline="central" fill="#111111">fixed module</text></g>
+<g transform="translate(356,321)"><line x1="0" y1="0" x2="24" y2="0" fill="none" stroke="#0072B2" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="32" y="0" font-size="12" dominant-baseline="central" fill="#111111">route ok (solid)</text></g>
+<g transform="translate(16,343)"><line x1="0" y1="0" x2="24" y2="0" fill="none" stroke="#E69F00" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="8 4"/>
+<text x="32" y="0" font-size="12" dominant-baseline="central" fill="#111111">detour &gt; 1.3 (dashed)</text></g>
+<g transform="translate(186,343)"><line x1="0" y1="0" x2="24" y2="0" fill="none" stroke="#D55E00" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 5"/>
+<text x="32" y="0" font-size="12" dominant-baseline="central" fill="#111111">unroutable (dotted)</text></g>
+<g transform="translate(356,343)"><path class="legend-marker" d="M12,-5 L17,0 L12,5 L7,0 Z" fill="#000000" stroke="#FFFFFF" stroke-width="1"/>
+<text x="32" y="0" font-size="12" dominant-baseline="central" fill="#111111">pipeline stage</text></g>
+</g>
+</svg>

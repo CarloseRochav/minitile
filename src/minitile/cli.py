@@ -16,6 +16,7 @@ from rich.measure import Measurement
 from rich.table import Table
 
 from minitile.api import Floorplan
+from minitile.metrics import MINUS, percent_change
 from minitile.model import Result
 from minitile.parser import DesignError
 
@@ -48,7 +49,7 @@ def _fmt_num(x: float) -> str:
 
 
 ARROW = "\N{RIGHTWARDS ARROW}"
-MINUS = "\N{MINUS SIGN}"
+__all__ = ["ARROW", "MINUS", "app", "percent_change"]
 
 
 def _unicode_ok(console: Console) -> bool:
@@ -58,20 +59,6 @@ def _unicode_ok(console: Console) -> bool:
     except (UnicodeEncodeError, LookupError):
         return False
     return True
-
-
-def percent_change(initial: float, final: float, minus: str = MINUS) -> str:
-    """Rounded percent change.
-
-    ``0%`` when it rounds to zero (never ``+0%``); improvements use the minus sign (U+2212),
-    regressions ``+``.
-    """
-    if initial <= 0:
-        return "0%"
-    pct = round((final - initial) / initial * 100)
-    if pct == 0:
-        return "0%"
-    return f"{minus}{-pct}%" if pct < 0 else f"+{pct}%"
 
 
 def header_line(result: Result, unicode: bool = True) -> str:
@@ -88,7 +75,7 @@ def header_line(result: Result, unicode: bool = True) -> str:
     )
 
 
-def render(console: Console, result: Result) -> None:
+def print_table(console: Console, result: Result) -> None:
     """Print the header line, the per-net table and any violations."""
     unicode = _unicode_ok(console)
     arrow = ARROW if unicode else "->"
@@ -145,6 +132,7 @@ def run(
     seed: Annotated[int, typer.Option(help="Random seed for annealing.")] = 0,
     iterations: Annotated[int, typer.Option(min=0, help="Annealing iterations.")] = 20_000,
     out: Annotated[Path | None, typer.Option(help="Write the JSON result here.")] = None,
+    svg: Annotated[Path | None, typer.Option(help="Also write an SVG drawing here.")] = None,
 ) -> None:
     """Validate, place, route and report a design."""
     console = _console()
@@ -156,7 +144,9 @@ def run(
     result = fp.place(seed=seed, iterations=iterations).route().report()
     if out is not None:
         result.to_json(out)
-    render(console, result)
+    if svg is not None:
+        result.to_svg(svg)
+    print_table(console, result)
     if not result.summary.legal:
         raise typer.Exit(EXIT_ILLEGAL)
     if result.summary.unroutable_count > 0:
@@ -174,7 +164,24 @@ def report(
     except (OSError, ValueError, ValidationError) as e:
         console.print(f"[bold red]Cannot read result:[/] {e}")
         raise typer.Exit(1) from None
-    render(console, result)
+    print_table(console, result)
+
+
+@app.command("render")
+def render_cmd(
+    result_json: Annotated[Path, typer.Argument(help="Result JSON from `run --out`.")],
+    out: Annotated[Path, typer.Option(help="SVG file to write.")],
+    cell: Annotated[int, typer.Option(min=1, help="Pixels per grid cell.")] = 10,
+) -> None:
+    """Draw a saved JSON result as an SVG."""
+    console = _console()
+    try:
+        result = Result.from_json(result_json)
+        result.to_svg(out, cell=cell)
+    except (OSError, ValueError, ValidationError) as e:
+        console.print(f"[bold red]Cannot render result:[/] {e}", markup=True)
+        raise typer.Exit(1) from None
+    console.print(f"wrote {out}", markup=False)
 
 
 if __name__ == "__main__":  # pragma: no cover

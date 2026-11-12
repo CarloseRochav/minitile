@@ -1,5 +1,90 @@
 {
   "design": "soc_demo",
+  "layout": {
+    "die": {
+      "halo": 1,
+      "height": 80,
+      "width": 80
+    },
+    "modules": {
+      "cpu_cluster": {
+        "fixed": false,
+        "h": 12,
+        "w": 14
+      },
+      "ddr_ctrl_0": {
+        "fixed": true,
+        "h": 14,
+        "w": 6
+      },
+      "ddr_ctrl_1": {
+        "fixed": true,
+        "h": 14,
+        "w": 6
+      },
+      "display": {
+        "fixed": false,
+        "h": 6,
+        "w": 8
+      },
+      "dsp": {
+        "fixed": false,
+        "h": 8,
+        "w": 8
+      },
+      "gpu": {
+        "fixed": false,
+        "h": 14,
+        "w": 16
+      },
+      "isp": {
+        "fixed": false,
+        "h": 8,
+        "w": 10
+      },
+      "l3_cache": {
+        "fixed": true,
+        "h": 18,
+        "w": 18
+      },
+      "modem": {
+        "fixed": false,
+        "h": 10,
+        "w": 12
+      },
+      "noc": {
+        "fixed": false,
+        "h": 6,
+        "w": 6
+      },
+      "npu": {
+        "fixed": false,
+        "h": 12,
+        "w": 12
+      },
+      "pcie_phy": {
+        "fixed": true,
+        "h": 5,
+        "w": 14
+      },
+      "sram": {
+        "fixed": false,
+        "h": 8,
+        "w": 10
+      },
+      "usb_phy": {
+        "fixed": true,
+        "h": 12,
+        "w": 4
+      },
+      "video_codec": {
+        "fixed": false,
+        "h": 8,
+        "w": 10
+      }
+    },
+    "reach_per_cycle": 8
+  },
   "nets": [
     {
       "detour": 1.0,
