@@ -63,6 +63,7 @@ def summarize(pr: PlacementResult, nets: list[NetMetrics]) -> Summary:
         unroutable_count=len(nets) - len(routed),
         seed=pr.seed,
         iterations=pr.iterations,
+        placement_skipped=pr.skipped,
     )
 
 

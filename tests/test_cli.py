@@ -3,7 +3,7 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from minitile.cli import app
+from minitile.cli import app, percent_change
 
 TESTCASES = Path(__file__).parent.parent / "testcases"
 runner = CliRunner()
@@ -52,7 +52,7 @@ def test_validate_invalid(tmp_path: Path) -> None:
 def test_run_ok() -> None:
     r = runner.invoke(app, ["run", str(TESTCASES / "tiny_2modules.yaml"), "--iterations", "100"])
     assert r.exit_code == 0, r.stdout
-    assert "Placement cost:" in r.stdout
+    assert r.stdout.startswith("placement: skipped (all modules fixed)")  # tiny is all fixed
     assert "a→b" in r.stdout or "a->b" in r.stdout
 
 
@@ -122,3 +122,36 @@ def test_run_out_and_report(tmp_path: Path) -> None:
 def test_report_bad_file(tmp_path: Path) -> None:
     r = runner.invoke(app, ["report", str(write(tmp_path, "x.json", "{not json"))])
     assert r.exit_code == 1
+
+
+def test_percent_change_signs() -> None:
+    assert percent_change(100, 100) == "0%"
+    assert percent_change(1000, 999) == "0%"  # -0.1% rounds to 0: no sign
+    assert percent_change(1000, 1001) == "0%"
+    assert percent_change(1842, 1107) == "\N{MINUS SIGN}40%"
+    assert percent_change(100, 150) == "+50%"
+    assert percent_change(100, 60, minus="-") == "-40%"
+    assert percent_change(0, 0) == "0%"
+
+
+def test_run_all_fixed_header_and_json(tmp_path: Path) -> None:
+    out = tmp_path / "r.json"
+    r = runner.invoke(app, ["run", str(TESTCASES / "blocked_route.yaml"), "--out", str(out)])
+    assert r.exit_code == 0, r.stdout
+    first = r.stdout.splitlines()[0]
+    assert first.startswith("placement: skipped (all modules fixed)")
+    assert "Placement cost" not in r.stdout and "iterations" not in first
+    s = json.loads(out.read_text())["summary"]
+    assert s["placement_skipped"] is True
+    assert s["cost_initial"] == s["cost_final"] == 69.0  # 19 + 50 * stages_est(19) = 19 + 50
+
+
+def test_run_movable_json_not_skipped(tmp_path: Path) -> None:
+    out = tmp_path / "r.json"
+    r = runner.invoke(
+        app, ["run", str(TESTCASES / "chain_5.yaml"), "--iterations", "200", "--out", str(out)]
+    )
+    assert r.exit_code == 0, r.stdout
+    assert json.loads(out.read_text())["summary"]["placement_skipped"] is False
+    assert r.stdout.startswith("Placement cost:")
+    assert "(+0%)" not in r.stdout

@@ -59,17 +59,30 @@ def _unicode_ok(console: Console) -> bool:
     return True
 
 
+def percent_change(initial: float, final: float, minus: str = MINUS) -> str:
+    """Rounded percent change.
+
+    ``0%`` when it rounds to zero (never ``+0%``); improvements use the minus sign (U+2212),
+    regressions ``+``.
+    """
+    if initial <= 0:
+        return "0%"
+    pct = round((final - initial) / initial * 100)
+    if pct == 0:
+        return "0%"
+    return f"{minus}{-pct}%" if pct < 0 else f"+{pct}%"
+
+
 def header_line(result: Result, unicode: bool = True) -> str:
     arrow, minus = (ARROW, MINUS) if unicode else ("->", "-")
     s = result.summary
-    if s.cost_initial > 0:
-        pct = (s.cost_final - s.cost_initial) / s.cost_initial * 100
-        change = f"{pct:+.0f}%".replace("-", minus)
-    else:
-        change = "0%"
+    legal = f"legal: {'yes' if s.legal else 'no'}"
+    if s.placement_skipped:
+        return f"placement: skipped (all modules fixed)  {legal}"
+    change = percent_change(s.cost_initial, s.cost_final, minus)
     return (
         f"Placement cost: {_fmt_num(s.cost_initial)} {arrow} {_fmt_num(s.cost_final)} "
-        f"({change})  legal: {'yes' if s.legal else 'no'}  seed: {s.seed}  "
+        f"({change})  {legal}  seed: {s.seed}  "
         f"iterations: {s.iterations:,}"
     )
 

@@ -75,6 +75,7 @@ class PlacementResult(_Base):
     cost_final: float
     seed: int
     iterations: int
+    skipped: bool = False  # True when no module is movable (greedy + annealing not run)
 
 
 class RouteResult(_Base):
@@ -108,6 +109,7 @@ class Summary(_Base):
     unroutable_count: int
     seed: int
     iterations: int
+    placement_skipped: bool = False
 
 
 class Params(_Base):

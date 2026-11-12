@@ -73,3 +73,17 @@ def test_legality_reports_violations() -> None:
 def test_zero_iterations() -> None:
     res = place(design("chain_5"), iterations=0)
     assert res.cost_final == res.cost_initial
+
+
+def test_all_fixed_skips_placement() -> None:
+    d = design("blocked_route")
+    res = place(d, seed=5, iterations=1_000)
+    assert res.skipped
+    assert res.placement == {m.name: m.fixed for m in d.modules}
+    fixed_cost = CostModel(d).full([m.fixed for m in d.modules if m.fixed is not None])
+    assert res.cost_initial == res.cost_final == fixed_cost
+    assert res.legal
+
+
+def test_movable_design_not_skipped() -> None:
+    assert not place(design("chain_5"), iterations=100).skipped

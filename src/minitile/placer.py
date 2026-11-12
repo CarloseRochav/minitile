@@ -186,12 +186,21 @@ def place(
     weights: CostWeights | None = None,
     p_translate: float = 0.7,
 ) -> PlacementResult:
-    """Greedy + simulated annealing + legality check."""
+    """Greedy + simulated annealing + legality check.
+
+    If no module is movable, greedy placement and annealing are skipped entirely: the fixed
+    placement is used as is and ``cost_initial == cost_final == full cost`` of it.
+    """
     model = CostModel(design, weights)
-    start = greedy_placement(model)
-    cost_initial = model.full(start)
-    params = AnnealParams(iterations=iterations, seed=seed, p_translate=p_translate)
-    best, cost_final = anneal(model, start, params)
+    skipped = all(m.fixed is not None for m in design.modules)
+    if skipped:
+        best = [m.fixed for m in design.modules if m.fixed is not None]
+        cost_initial = cost_final = model.full(best)
+    else:
+        start = greedy_placement(model)
+        cost_initial = model.full(start)
+        params = AnnealParams(iterations=iterations, seed=seed, p_translate=p_translate)
+        best, cost_final = anneal(model, start, params)
     placement = {n: best[i] for i, n in enumerate(model.names)}
     violations = check_legality(design, placement)
     return PlacementResult(
@@ -202,4 +211,5 @@ def place(
         cost_final=cost_final,
         seed=seed,
         iterations=iterations,
+        skipped=skipped,
     )

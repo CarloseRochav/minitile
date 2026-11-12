@@ -109,6 +109,7 @@
     "iterations": 20000,
     "legal": true,
     "max_detour": 1.0,
+    "placement_skipped": false,
     "seed": 42,
     "total_pipeline_stages": 0,
     "total_weighted_length": 19.0,
