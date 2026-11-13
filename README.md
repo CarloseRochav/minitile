@@ -17,12 +17,12 @@ definitions.
 
 ![soc_demo floorplan: placed blocks, routes, and pipeline-stage markers](docs/img/soc_demo.svg)
 
-`testcases/soc_demo.yaml` with `--seed 42`: annealing cuts the placement cost from 2,854 to
-2,236 (−22%) and pulls the GPU, display and video codec to within 2–5 cells of the NoC, with the
-GPU also 4 cells from `ddr_ctrl_1`. Paths to the edge PHYs can't shrink: `noc→usb_phy` crosses
-the die in 64 steps and needs 7 pipeline stages, and `noc→pcie_phy` needs 4. The dashed orange
-route is `dsp→noc`, which has to go over the fixed `l3_cache`: 39 steps against a Manhattan
-distance of 28 (detour 1.393).
+The placer pulls high-bandwidth pairs together (cpu_cluster→l3_cache, npu→sram and
+gpu→ddr_ctrl_1 are 2–4 cells apart), while links to fixed edge blocks still need pipelining:
+noc→ddr_ctrl_1 needs 3 stages and the low-bandwidth noc→usb_phy needs 7. dsp sits next to modem
+rather than near noc, so dsp→noc detours around the central l3_cache (detour 1.39). Several
+routes share the channel below noc because routing ignores congestion. A real router would have
+to spread them out, making them longer.
 
 ## How it relates to physical-aware floorplanning
 
@@ -198,6 +198,13 @@ falls back to `->` and `-`. Set `PYTHONIOENCODING=utf-8` to get the Unicode glyp
   (`tests/test_determinism.py`).
 - If annealing never improves on the greedy placement, the greedy placement is returned, so
   `cost_final <= cost_initial` always holds.
+
+## What I'd improve next
+
+- Congestion-aware routing (rip-up and reroute with rising cost on crowded cells).
+- Weight pipeline-stage cost by bus width: one stage on a 512-bit bus costs 8× the registers of one on a 64-bit bus.
+- MCP server so AI agents can run, inspect and try what-if changes on designs.
+- Edge-specific pins and multi-pin nets.
 
 ## Limitations
 

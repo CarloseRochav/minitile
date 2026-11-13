@@ -420,12 +420,12 @@ Expected: `status = unroutable`, `length = null`; CLI `run` exits with code `3`.
 
 ## 12. Acceptance criteria for Phase 1
 
-- [ ] All tests pass in CI; ruff and `mypy --strict` clean.
-- [ ] Exact router values in 11.5 match.
-- [ ] `minitile run testcases/star_noc.yaml --seed 42` prints the table and finishes in < 2 s.
-- [ ] A generated design with 30 modules and 60 nets on a 100×100 die finishes 20 000 iterations
+- [ ] All tests pass in CI; ruff and `mypy --strict` clean. (pending first CI run)
+- [x] Exact router values in 11.5 match.
+- [x] `minitile run testcases/star_noc.yaml --seed 42` prints the table and finishes in < 2 s.
+- [x] A generated design with 30 modules and 60 nets on a 100×100 die finishes 20 000 iterations
       plus routing in < 10 s on a laptop (add a benchmark script, not a CI test).
-- [ ] README explains the model, its limitations (no congestion, no real timing, no power grid,
+- [x] README explains the model, its limitations (no congestion, no real timing, no power grid,
       grid abstraction), and how it relates to physical-aware floorplanning.
 
 ## 13. Known limitations (state these in the README)
