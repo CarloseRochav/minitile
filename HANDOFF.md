@@ -1,7 +1,8 @@
 # HANDOFF.md
 
 Project status and development notes, so any coding agent (or human) can pick up the work.
-Last updated: 2026-11-12, at commit `1ed9e9f`.
+Last updated: 2026-11-13. Phase 1 and SVG rendering are unchanged since `1ed9e9f`;
+this update records the CI badge on the README.
 
 Read in this order: **this file**, then [CLAUDE.md](CLAUDE.md) (workflow rules), then
 [SPEC.md](SPEC.md) (the source of truth for every formula and definition), then
@@ -33,7 +34,8 @@ Health at `1ed9e9f` (verified 2026-11-12):
 - `mypy --strict`: clean (25 source files: `src`, `tests`, `scripts`)
 - `scripts/benchmark.py` (30 modules / 60 nets / 100×100, 20 000 iterations): ~1.9 s, target < 10 s
 - `main` is pushed to `origin` (`github.com/CarloseRochav/minitile`). CI runs lint, format,
-  mypy and tests on every push (`.github/workflows/ci.yml`).
+  mypy and tests on every push (`.github/workflows/ci.yml`). The README badge tracks that
+  workflow on `main`.
 
 ## 3. Code map
 
@@ -101,8 +103,8 @@ overlapping footprints get route length 0; all-fixed designs skip placement
 - Two **untracked** files in the repo root, `soc_demo.svg` and `soc_demo_check.svg`, are
   byte-identical to `docs/img/soc_demo.svg` (leftovers from a manual render check). Safe to
   delete; consider adding `*.svg` in the root to `.gitignore`.
-- README placeholders for the owner: the CI badge (`<!-- CI badge ... -->`, the remote now
-  exists) and the "Why I built this" section (`TODO(Carlos)`).
+- README placeholder for the owner: the "Why I built this" section (`TODO(Carlos)`).
+  The CI badge is under the title and tracks `.github/workflows/ci.yml` on `main`.
 - SPEC Section 12 checkboxes are still `[ ]` although all criteria are met.
 - **Scope conflict to resolve with the user:** CLAUDE.md still says "Implement Phase 1 only",
   but SVG rendering (Phase 2) has been added and SPEC Sections 1 and 14 were
@@ -112,7 +114,7 @@ overlapping footprints get route length 0; all-fixed designs skip placement
 
 ## 7. Suggested next steps (confirm with the user first)
 
-1. Clean up the untracked SVGs; tick SPEC Section 12; add the CI badge.
+1. Clean up the untracked SVGs; tick SPEC Section 12.
 2. Decide the next phase and write its spec section in SPEC.md before coding (same style as
    Section 14: interfaces, rules, determinism, tests).
 3. Possible Phase 1 improvements already listed as limitations: net congestion, module rotation,

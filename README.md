@@ -1,6 +1,6 @@
 # minitile
 
-<!-- CI badge: add after the GitHub remote exists -->
+[![CI](https://github.com/CarloseRochav/minitile/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/CarloseRochav/minitile/actions/workflows/ci.yml)
 
 A small learning project inspired by **physical-aware floorplanning** tools used in SoC
 (system-on-chip) design. Given a die, a set of rectangular chip modules and the data paths (nets)
