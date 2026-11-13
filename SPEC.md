@@ -6,7 +6,7 @@
 
 ---
 
-Implementation workflow notes for AI coding agents are in CLAUDE.md.
+Implementation workflow notes for AI coding agents are in AGENTS.md.
 
 ---
 
