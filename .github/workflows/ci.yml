@@ -2,11 +2,16 @@ name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    env:
+      COLUMNS: "120"
+      PYTHONIOENCODING: utf-8
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
