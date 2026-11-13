@@ -1,8 +1,8 @@
 # HANDOFF.md
 
 Project status and development notes, so any coding agent (or human) can pick up the work.
-Last updated: 2026-11-13. Phase 1 and SVG rendering are unchanged since `1ed9e9f`;
-this update records the CI badge on the README.
+Last updated: 2026-11-13. Phase 1 and SVG rendering are unchanged since `1ed9e9f`.
+The README has the CI badge. `soc_demo.svg` and `soc_demo_check.svg` are tracked.
 
 Read in this order: **this file**, then [CLAUDE.md](CLAUDE.md) (workflow rules), then
 [SPEC.md](SPEC.md) (the source of truth for every formula and definition), then
@@ -100,9 +100,8 @@ overlapping footprints get route length 0; all-fixed designs skip placement
 
 ## 6. Loose ends
 
-- Two **untracked** files in the repo root, `soc_demo.svg` and `soc_demo_check.svg`, are
-  byte-identical to `docs/img/soc_demo.svg` (leftovers from a manual render check). Safe to
-  delete; consider adding `*.svg` in the root to `.gitignore`.
+- `soc_demo.svg` and `soc_demo_check.svg` in the repo root are tracked and byte-identical
+  to `docs/img/soc_demo.svg` (copies from a manual render check).
 - README placeholder for the owner: the "Why I built this" section (`TODO(Carlos)`).
   The CI badge is under the title and tracks `.github/workflows/ci.yml` on `main`.
 - SPEC Section 12 checkboxes are still `[ ]` although all criteria are met.
@@ -114,7 +113,7 @@ overlapping footprints get route length 0; all-fixed designs skip placement
 
 ## 7. Suggested next steps (confirm with the user first)
 
-1. Clean up the untracked SVGs; tick SPEC Section 12.
+1. Tick SPEC Section 12.
 2. Decide the next phase and write its spec section in SPEC.md before coding (same style as
    Section 14: interfaces, rules, determinism, tests).
 3. Possible Phase 1 improvements already listed as limitations: net congestion, module rotation,
