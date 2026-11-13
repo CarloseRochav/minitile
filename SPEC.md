@@ -22,7 +22,7 @@ Given a YAML description of a die (chip area), modules (rectangles) and nets (da
 5. Output a JSON result and a readable table.
 
 ### Out of scope for Phase 1
-- HTML rendering, web GUI, FastAPI, MCP server, testcase extraction (Phases 2–4).
+- Out of scope: HTML/web GUI, FastAPI service and testcase extraction (Phases 2–4). The MCP server is covered by Section 15.
   *SVG rendering (part of Phase 2) is now implemented; see Section 14.*
 - Net-to-net congestion (routes do not block each other).
 - Module rotation (field exists in the model, but must be rejected by validation if `true`).
@@ -468,3 +468,153 @@ module's `w`, `h` and `fixed` flag), so a saved result can be drawn without the 
   stages, max detour. Legend: fixed vs movable, the three route statuses, the stage marker.
 - Deterministic: the same JSON gives a byte-identical SVG (no timestamps or random ids;
   coordinates rounded to at most 2 decimals; modules drawn in name order, nets in result order).
+
+
+
+## 15. MCP server (Phase 4, partial)
+
+> Status: **APPROVED** (2026-11-12, Carlos Rocha).
+
+### 15.1 Goal
+
+Expose minitile to AI agents through the Model Context Protocol, so an agent can validate designs,
+run placement and routing, inspect nets, and try "what-if" changes, then reason about the results.
+
+The server is a thin, deterministic layer over the existing API (`api.py`). It contains **no LLM
+calls and no new placement or routing logic**. The agent does the reasoning; the server only
+returns facts.
+
+Example agent session this enables:
+> "Run soc_demo. Why is dsp→noc flagged? What happens if dsp is fixed next to noc?"
+
+### 15.2 Out of scope
+- HTTP/SSE transport, authentication, multi-user use. **stdio transport only.**
+- Changing designs on disk. The server never writes files except where 15.6 allows it.
+- New metrics or algorithms. Anything the server reports must already be computable with the
+  Phase 1 / Section 14 code, or be defined in 15.5.
+
+### 15.3 Dependencies and entry point
+- New dependency: the official MCP Python SDK (`mcp` package), as an **optional extra**:
+  `uv sync --extra mcp`. The core package must still install and pass all tests without it.
+- New CLI command: `minitile mcp [--root PATH]` starts the server on stdio.
+  If the extra is not installed, print a one-line install hint and exit with code `1`.
+- New module: `src/minitile/mcp_server.py`. Tool logic lives in plain, typed functions in
+  `src/minitile/agent_tools.py` (no SDK imports) so it can be tested without MCP.
+  `mcp_server.py` only registers those functions with the SDK.
+
+### 15.4 Tools
+
+All tools return JSON-serializable objects. Errors are returned as
+`{"error": {"code": "<code>", "message": "<human text>", "details": [...]}}`, never as stack traces.
+Error codes: `invalid_design`, `not_found`, `path_not_allowed`, `limit_exceeded`, `bad_argument`.
+
+| Tool | Arguments | Returns |
+|---|---|---|
+| `list_testcases` | — | `[{name, modules, nets, movable}]` for every `testcases/*.yaml`, sorted by name |
+| `validate_design` | `design` (see 15.4.1) | `{ok: true}` or `invalid_design` error listing all problems |
+| `run_design` | `design`, `seed=0`, `iterations=20000`, `include_paths=false` | `{result_id, summary, placement, nets}` (net `path` omitted unless `include_paths`) |
+| `get_net` | `result_id`, `from`, `to` | the full net record from the result, including `path` |
+| `explain_net` | `result_id`, `from`, `to` | facts defined in 15.5 |
+| `what_if` | `result_id`, `fix` (map of module → `[x, y]`), `seed?`, `iterations?` | new `run_design` output plus a `comparison` (15.5) against the original |
+| `render_svg` | `result_id`, `cell=10` | `{svg: "<svg ...>"}` using Section 14 rules, unchanged |
+
+If `from`/`to` match a net in the reverse direction, return that net. If several nets share the
+pair (duplicates are allowed, SPEC 5 rule 10), return all of them as a list.
+
+#### 15.4.1 The `design` argument
+Exactly one of:
+- `{"testcase": "soc_demo"}` → `testcases/soc_demo.yaml`
+- `{"path": "relative/or/absolute.yaml"}` → must resolve inside the allowed root (15.6)
+- `{"yaml": "<inline YAML text>"}`
+
+Anything else → `bad_argument`.
+
+#### 15.4.2 Results store
+- Results are kept in memory in an LRU store holding at most **32** results.
+- `result_id` = first 12 hex characters of the SHA-256 of the canonical JSON of
+  `{design (parsed, normalized), seed, iterations, fixed overrides}`. The same inputs always give
+  the same `result_id` and the same result.
+- An unknown or evicted `result_id` → `not_found` with a hint to rerun `run_design`.
+
+### 15.5 Definitions for `explain_net` and `what_if`
+
+`explain_net` returns:
+
+| Field | Definition |
+|---|---|
+| `net` | the net record (without `path`) |
+| `bounding_box` | smallest axis-aligned rectangle containing both endpoint footprints, `[x, y, w, h]` |
+| `obstacles_in_box` | names of modules, other than the two endpoints, whose footprint intersects `bounding_box`, sorted by name |
+| `extra_length` | `length - manhattan` (null if unroutable) |
+| `stage_breakdown` | `reach_per_cycle`, `length`, `pipeline_stages`, and `cells_to_next_stage_saving` = `length - reach_per_cycle * pipeline_stages` (cells that would have to be removed to drop one stage; `null` if stages = 0) |
+| `endpoint_status` | for each endpoint: `fixed` or `movable` |
+| `shared_cells` | number of this net's path cells also used by at least one other net's path (shows where congestion would appear; 0 if unroutable) |
+
+`what_if` comparison:
+
+| Field | Definition |
+|---|---|
+| `legal` | of the new run |
+| `cost_final` | `{before, after, delta}` |
+| `total_pipeline_stages` | `{before, after, delta}` |
+| `max_detour` | `{before, after, delta}` |
+| `changed_nets` | nets whose `length`, `pipeline_stages` or `status` changed, with before/after for each, sorted by the absolute stage delta (desc), then name pair |
+
+`what_if` rules:
+- Each module in `fix` becomes fixed at the given position for the new run. Modules not listed
+  keep their original fixed/movable status.
+- The overrides go through normal validation (inside die, no overlap or halo violation with other
+  fixed modules). On failure → `invalid_design` listing the problems.
+- Defaults: the original run's `seed` and `iterations`.
+
+### 15.6 Safety limits
+- `--root` (default: current working directory). `path` designs must resolve, after following
+  symlinks, inside the root, otherwise → `path_not_allowed`. Testcases always come from the
+  package's `testcases/` directory.
+- Inline YAML ≤ 256 KB, parsed with `yaml.safe_load` only.
+- Limits: modules ≤ 500, nets ≤ 2,000, die ≤ 1,000 × 1,000, iterations ≤ 200,000. Over a limit →
+  `limit_exceeded` naming the limit.
+- The server writes no files.
+- Log to stderr only. stdout is reserved for the MCP protocol.
+
+### 15.7 Determinism
+Same tool call with the same arguments → identical JSON (keys sorted, floats rounded to 3 decimals,
+as in 9.3), regardless of call order or what else is in the results store.
+
+### 15.8 Implementation steps
+
+| # | Step | Done when |
+|---|---|---|
+| 15a | `agent_tools.py`: design loading (15.4.1), limits (15.6), results store (15.4.2) | unit tests pass |
+| 15b | `list_testcases`, `validate_design`, `run_design`, `get_net`, `render_svg` | unit tests pass |
+| 15c | `explain_net` and `what_if` per 15.5 | unit tests with exact values pass |
+| 15d | `mcp_server.py` + `minitile mcp` + optional extra | in-memory SDK client test and stdio smoke test pass |
+| 15e | README "Use with an AI agent" section + example session transcript (real output) | reviewed by me |
+
+### 15.9 Tests
+- **Design loading:** each of the three forms works; two forms at once → `bad_argument`;
+  a path outside root (including through `..` and a symlink) → `path_not_allowed`;
+  oversized YAML and each limit → `limit_exceeded`.
+- **Results store:** same inputs → same `result_id`; the 33rd distinct result evicts the oldest;
+  evicted id → `not_found`.
+- **run_design** on soc_demo with seed 42 matches the committed golden JSON (paths omitted unless
+  requested).
+- **explain_net, exact values** on `blocked_route`, net a→b:
+  `bounding_box = [2, 8, 26, 4]`, `obstacles_in_box = ["wall"]`, `extra_length = 14`,
+  `stage_breakdown.cells_to_next_stage_saving = 9`, both endpoints `fixed`, `shared_cells = 0`.
+- **explain_net** on soc_demo dsp→noc: `extra_length = 11`, `pipeline_stages = 4`,
+  `"l3_cache"` in `obstacles_in_box`.
+- **what_if:** fixing a module onto another fixed module → `invalid_design`; a valid override returns
+  a comparison whose `before` values equal the original result; same call twice → identical output.
+- **render_svg** output is byte-identical to `minitile render` for the same result.
+- **MCP layer:** using the SDK's in-memory client/server test utilities (or, if unavailable, a
+  stdio subprocess), list the tools and confirm all seven names and their argument schemas; call
+  `run_design` on `tiny_2modules` end to end.
+- **Without the extra:** core test suite passes; `minitile mcp` exits with code 1 and the hint.
+
+### 15.10 Acceptance criteria
+- [ ] All tests pass in CI with and without the `mcp` extra (two CI jobs, or one job running both).
+- [ ] ruff and `mypy --strict` clean.
+- [ ] README shows how to register the server in an MCP client
+      (command: `uv run --extra mcp minitile mcp --root .`) and includes one real agent session that
+      answers: "Why is dsp→noc flagged in soc_demo, and what happens if dsp is fixed next to noc?"
