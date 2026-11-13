@@ -1,12 +1,12 @@
 # HANDOFF.md
 
 Project status and development notes, so any coding agent (or human) can pick up the work.
-Last updated: 2026-11-13. Phase 1 and SVG rendering are unchanged since `1ed9e9f`.
-The README has the CI badge. `soc_demo.svg` and `soc_demo_check.svg` are tracked.
+Last updated: 2026-11-13, after `4cf5565` (Section 15 approved, not implemented).
+Phase 1 and SVG rendering are unchanged since `1ed9e9f`.
 
-Read in this order: **this file**, then [CLAUDE.md](CLAUDE.md) (workflow rules), then
-[SPEC.md](SPEC.md) (the source of truth for every formula and definition), then
-[README.md](README.md) (user-facing docs and implementation notes).
+Read in this order: **this file**, then [AGENTS.md](AGENTS.md) (workflow rules;
+[CLAUDE.md](CLAUDE.md) is only a pointer to it), then [SPEC.md](SPEC.md) (the source of
+truth for every formula and definition), then [README.md](README.md) (user-facing docs).
 
 ---
 
@@ -22,10 +22,11 @@ Manhattan lower bound, detour ratio and pipeline stages as JSON, a rich table, a
 | Area | Status |
 |---|---|
 | Phase 1, SPEC Section 10 steps 1–10 | **Done**, one commit per step (`276fadc` … `1a5962d`) |
-| Phase 1 acceptance criteria (SPEC Section 12) | **All met** (the checkboxes in SPEC.md are still unticked) |
+| Phase 1 acceptance criteria (SPEC Section 12) | Four local checks ticked. The CI checkbox is still open: "(pending first CI run)" |
 | Phase 2: SVG rendering (SPEC Section 14) | **Done** (`38a06e8`, `1ed9e9f`) |
-| Phase 2: HTML rendering / web GUI | Not started |
-| Phases 3–4: FastAPI, MCP server, testcase extraction | Not started |
+| Phase 2: HTML rendering / web GUI | Not started. No spec section |
+| Section 15: MCP server | **Approved** (`4cf5565`). Not started |
+| FastAPI service, testcase extraction | Not started. No spec section |
 
 Health at `1ed9e9f` (verified 2026-11-12):
 
@@ -33,9 +34,9 @@ Health at `1ed9e9f` (verified 2026-11-12):
 - `ruff check`, `ruff format --check`: clean
 - `mypy --strict`: clean (25 source files: `src`, `tests`, `scripts`)
 - `scripts/benchmark.py` (30 modules / 60 nets / 100×100, 20 000 iterations): ~1.9 s, target < 10 s
-- `main` is pushed to `origin` (`github.com/CarloseRochav/minitile`). CI runs lint, format,
-  mypy and tests on every push (`.github/workflows/ci.yml`). The README badge tracks that
-  workflow on `main`.
+- `origin` is `github.com/CarloseRochav/minitile`. CI (`.github/workflows/ci.yml`) runs on
+  push and pull_request to `main`, with `COLUMNS=120` and `PYTHONIOENCODING=utf-8`. The
+  README badge tracks that workflow. Local commits after `d2775d8` are not pushed.
 
 ## 3. Code map
 
@@ -70,8 +71,11 @@ uv run python scripts/benchmark.py
 uv run pytest --update-golden   # ONLY when an output change is intended; review the diff
 ```
 
-Rules that every change must keep (from CLAUDE.md and SPEC.md):
+Rules that every change must keep (from AGENTS.md and SPEC.md):
 
+- Implement only what has an APPROVED spec section. If the work has no approved section, stop
+  and ask. Sections marked PROPOSED must not be implemented. Section 15 is approved; do not
+  start it unless the user asks.
 - SPEC.md formulas are the source of truth. If something is ambiguous or looks wrong, **ask the
   user** instead of guessing or changing a definition.
 - Every step ends with tests, ruff, ruff format and `mypy --strict` clean, then **one commit**.
@@ -100,22 +104,16 @@ overlapping footprints get route length 0; all-fixed designs skip placement
 
 ## 6. Loose ends
 
-- `soc_demo.svg` and `soc_demo_check.svg` in the repo root are tracked and byte-identical
-  to `docs/img/soc_demo.svg` (copies from a manual render check).
+- The only committed drawing is `docs/img/soc_demo.svg`. The root copies are gone.
 - README placeholder for the owner: the "Why I built this" section (`TODO(Carlos)`).
   The CI badge is under the title and tracks `.github/workflows/ci.yml` on `main`.
-- SPEC Section 12 checkboxes are still `[ ]` although all criteria are met.
-- **Scope conflict to resolve with the user:** CLAUDE.md still says "Implement Phase 1 only",
-  but SVG rendering (Phase 2) has been added and SPEC Sections 1 and 14 were
-  updated. Before starting any further Phase 2–4 work, confirm scope with the user and update
-  CLAUDE.md/SPEC.md first (the spec has no definition yet for HTML, web GUI, FastAPI, MCP or
-  testcase extraction).
+- SPEC Section 12: the CI checkbox is still open. The other four are ticked.
 
 ## 7. Suggested next steps (confirm with the user first)
 
-1. Tick SPEC Section 12.
-2. Decide the next phase and write its spec section in SPEC.md before coding (same style as
-   Section 14: interfaces, rules, determinism, tests).
+1. Section 15 (MCP server) is specified and not implemented. Start it only when the user asks,
+   in the order of steps 15a–15e.
+2. HTML/web GUI, FastAPI, and testcase extraction still have no spec section. Do not build them.
 3. Possible Phase 1 improvements already listed as limitations: net congestion, module rotation,
    pins on edges, multi-pin nets. Each changes SPEC definitions, so each needs user sign-off.
 
