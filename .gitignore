@@ -7,6 +7,7 @@ __pycache__/
 .hypothesis/
 dist/
 *.egg-info/
+/*.svg
 *_check.svg
 result.json
 out.json

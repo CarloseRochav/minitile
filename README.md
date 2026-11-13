@@ -77,7 +77,7 @@ uv run minitile report result.json
 Drawing a result as SVG:
 
 ```bash
-uv run minitile run testcases/soc_demo.yaml --seed 42 --svg soc_demo.svg   # draw while running
+uv run minitile run testcases/soc_demo.yaml --seed 42 --svg docs/img/soc_demo.svg   # draw while running
 uv run minitile render result.json --out result.svg [--cell 10]           # draw a saved result
 ```
 
